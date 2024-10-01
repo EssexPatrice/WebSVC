@@ -139,7 +139,7 @@ function App() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button className="refresh-data-button" onClick={handleRefresh}>
+        <button className="submit-button" onClick={handleRefresh}>
           Refresh data
         </button>
         <div className="right-container">
