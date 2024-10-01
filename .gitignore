@@ -1,0 +1,55 @@
+# Python-related files (Flask Backend)
+websvcback/__pycache__/
+websvcback/*.py[cod]
+websvcback/*.sqlite3
+websvcback/*.db
+websvcback/*.pyo
+websvcback/*.pyc
+
+# Virtual environment (Python)
+websvcback/venv/
+websvcback/env/
+websvcback/.venv/
+websvcback/ENV/
+
+# Flask-specific
+websvcback/instance/
+websvcback/*.log
+websvcback/.Python
+websvcback/python_packages/
+
+# Node.js (React Frontend)
+websvcback/node_modules/
+websvcfront/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build files (React)
+websvcfront/build/
+websvcfront/build/static/
+websvcfront/build/*.html
+websvcfront/build/*.json
+websvcfront/build/*.ico
+websvcfront/build/*.png
+websvcfront/build/*.svg
+websvcfront/build/*.txt
+websvcfront/build/static/css/
+websvcfront/build/static/js/
+websvcfront/build/static/media/
+
+# Environment variables
+websvcback/.env
+websvcfront/.env
+
+# OS generated files #
+######################
+.DS_Store
+Thumbs.db
+
+# IDE and Editor settings #
+###########################
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project

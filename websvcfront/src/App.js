@@ -1,0 +1,240 @@
+import React, { useState, useEffect } from 'react';
+import './App.css';
+
+function App() {
+  const [tableData, setTableData] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'none' });
+
+  const [lastChecked, setLastChecked] = useState(null);
+  const [action, setAction] = useState('Select action');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Utility function to generate random power values between 10.0W and 15.0W
+  const getRandomPower = () => (Math.random() * (15 - 10) + 10).toFixed(1) + 'W';
+
+  // Utility function to generate random terminal numbers between T1000 and T2200
+  const getRandomTerminal = () => 'T' + (Math.floor(Math.random() * (2200 - 1000 + 1)) + 1000);
+
+  // Utility function to get random units
+  const units = ["120A", "120B", "60B", "80U", "80L", "240A", "240B", "240C", "240D"];
+  const getRandomUnit = () => units[Math.floor(Math.random() * units.length)];
+
+  // Generate random table data on component mount
+  useEffect(() => {
+    generateData();
+  }, []);
+
+  const generateData = () => {
+    let data = [];
+    for (let i = 0; i < 15; i++) {
+      data.push({
+        Include: false,
+        Unit: getRandomUnit(),
+        Terminal: getRandomTerminal(),
+        VNC: "Go",
+        AppAdmin: "Go",
+        IP: `192.168.1.${i + 1}`,
+        MAC: `XX:XX:XX:XX:XX:${String(i + 1).padStart(2, '0')}`,
+        Switch: `S${i + 1}`,
+        Port: `P${i + 1}`,
+        Power: getRandomPower(),
+        Orion: "Go",
+        Zabbix: "Go"
+      });
+    }
+    setTableData(data);
+  };
+
+  const sortTable = (key) => {
+    let direction = 'ascending';
+
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
+      direction = 'none';
+    }
+
+    if (direction !== 'none') {
+      const sortedData = [...tableData].sort((a, b) => {
+        if (key === 'Power') {
+          const aValue = parseFloat(a[key]);
+          const bValue = parseFloat(b[key]);
+          if (aValue < bValue) return direction === 'ascending' ? -1 : 1;
+          if (aValue > bValue) return direction === 'ascending' ? 1 : -1;
+          return 0;
+        } else {
+          if (a[key] < b[key]) return direction === 'ascending' ? -1 : 1;
+          if (a[key] > b[key]) return direction === 'ascending' ? 1 : -1;
+          return 0;
+        }
+      });
+      setTableData(sortedData);
+    }
+
+    setSortConfig({ key, direction });
+  };
+
+  const handleCheckboxChange = (index, event) => {
+    const newTableData = [...tableData];
+    if (event.shiftKey && lastChecked !== null) {
+      const start = Math.min(lastChecked, index);
+      const end = Math.max(lastChecked, index);
+      const newValue = tableData[lastChecked].Include;
+      for (let i = start; i <= end; i++) {
+        newTableData[i].Include = newValue;
+      }
+    } else {
+      newTableData[index].Include = !newTableData[index].Include;
+      setLastChecked(index);
+    }
+    setTableData(newTableData);
+  };
+
+  const handleSubmit = () => {
+    if (action === 'Select action') {
+      alert('Please select an action');
+    } else {
+      alert(`Action: ${action}`);
+    }
+  };
+
+  const deleteRow = (index) => {
+    alert(`Action: Go for row ${index + 1}`);
+  };
+
+  const handleVNCButtonClick = (index) => {
+    alert(`VNC Go button clicked for row ${index + 1}`);
+  };
+
+  const handleOrionClick = (index) => {
+    alert(`Orion Go button clicked for row ${index + 1}`);
+  };
+
+  const handleZabbixClick = (index) => {
+    alert(`Zabbix Go button clicked for row ${index + 1}`);
+  };
+
+  const handleRefresh = () => {
+    generateData(); // Refresh the data
+  };
+
+  const getSortColor = (column) => {
+    if (sortConfig.key === column) {
+      if (sortConfig.direction === 'ascending') {
+        return 'blue';
+      } else if (sortConfig.direction === 'descending') {
+        return 'purple';
+      }
+    }
+    return ''; // Default color when not sorted
+  };
+
+  return (
+    <div className="App night-mode">
+      <div className="search-container">
+        <input
+          type="text"
+          className="search-box"
+          placeholder="Search Site..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <button className="refresh-data-button" onClick={handleRefresh}>
+          Refresh data
+        </button>
+        <div className="right-container">
+          <select className="action-dropdown" value={action} onChange={(e) => setAction(e.target.value)} style={{ width: '130%' }}>
+            <option>Select action</option>
+            <option>Reboot Browser</option>
+            <option>Reboot Terminal</option>
+            <option>Get IP + MAC</option>
+          </select>
+          <button className="submit-button" onClick={handleSubmit}>Submit</button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Include</th>
+            <th
+              style={{ color: getSortColor('Unit') }}
+              onClick={() => sortTable('Unit')}
+            >
+              Unit
+            </th>
+            <th
+              style={{ color: getSortColor('Terminal') }}
+              onClick={() => sortTable('Terminal')}
+            >
+              Terminal
+            </th>
+            <th>VNC</th>
+            <th>App Admin</th>
+            <th
+              style={{ color: getSortColor('IP') }}
+              onClick={() => sortTable('IP')}
+            >
+              IP
+            </th>
+            <th>MAC</th>
+            <th
+              style={{ color: getSortColor('Switch') }}
+              onClick={() => sortTable('Switch')}
+            >
+              Switch
+            </th>
+            <th>Port</th>
+            <th
+              style={{ color: getSortColor('Power') }}
+              onClick={() => sortTable('Power')}
+            >
+              Power
+            </th>
+            <th>Orion</th>
+            <th>Zabbix</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tableData.map((row, index) => (
+            <tr key={index} style={{ backgroundColor: row.Include ? 'green' : '#424242' }}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={row.Include}
+                  onChange={(e) => handleCheckboxChange(index, e)}
+                  style={{
+                    transform: "scale(1.5)",
+                    backgroundColor: row.Include ? "green" : "#424242",
+                    color: row.Include ? "white" : "#f0f0f0",
+                  }}
+                />
+              </td>
+              <td>{row.Unit}</td>
+              <td>{row.Terminal}</td>
+              <td>
+                <button onClick={() => handleVNCButtonClick(index)}>Go</button>
+              </td>
+              <td>
+                <button onClick={() => deleteRow(index)}>Go</button>
+              </td>
+              <td>{row.IP}</td>
+              <td>{row.MAC}</td>
+              <td>{row.Switch}</td>
+              <td>{row.Port}</td>
+              <td>{row.Power}</td>
+              <td>
+                <button onClick={() => handleOrionClick(index)}>Go</button>
+              </td>
+              <td>
+                <button onClick={() => handleZabbixClick(index)}>Go</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default App;

@@ -1,0 +1,8 @@
+cd /Users/patricelaperriere/Documents/WebSVCdashboard/websvcfront
+webscvfront --> npm start
+
+cd /Users/patricelaperriere/Documents/WebSVCdashboard/websvcback
+webscvback --> source venv/bin/activate  # On Windows: venv\Scripts\activate
+...then, python app.py
+
+chmod +x venv/bin/activate
