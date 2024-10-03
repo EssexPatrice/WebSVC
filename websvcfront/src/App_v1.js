@@ -4,10 +4,10 @@ import './App.css';
 function App() {
   const [tableData, setTableData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'none' });
+
   const [lastChecked, setLastChecked] = useState(null);
   const [action, setAction] = useState('Select action');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSiteId, setSelectedSiteId] = useState('');
 
   // Utility function to generate random power values between 10.0W and 15.0W
   const getRandomPower = () => (Math.random() * (15 - 10) + 10).toFixed(1) + 'W';
@@ -47,6 +47,7 @@ function App() {
 
   const sortTable = (key) => {
     let direction = 'ascending';
+
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
@@ -58,11 +59,13 @@ function App() {
         if (key === 'Power') {
           const aValue = parseFloat(a[key]);
           const bValue = parseFloat(b[key]);
-          return direction === 'ascending' ? aValue - bValue : bValue - aValue;
+          if (aValue < bValue) return direction === 'ascending' ? -1 : 1;
+          if (aValue > bValue) return direction === 'ascending' ? 1 : -1;
+          return 0;
         } else {
-          return direction === 'ascending'
-            ? a[key].localeCompare(b[key])
-            : b[key].localeCompare(a[key]);
+          if (a[key] < b[key]) return direction === 'ascending' ? -1 : 1;
+          if (a[key] > b[key]) return direction === 'ascending' ? 1 : -1;
+          return 0;
         }
       });
       setTableData(sortedData);
@@ -95,7 +98,6 @@ function App() {
         .then(data => {
           console.log("Search result:", data); // Log the result from the backend
           setTableData(data);  // Populate the table with the result
-          setSelectedSiteId(searchTerm);  // Save the site ID for further actions
         })
         .catch(error => {
           console.error('Error fetching data:', error);
@@ -115,10 +117,8 @@ function App() {
     if (action === 'Select action') {
       alert('Please select an action');
     } else if (action === 'Get IP + MAC') {
-      if (!selectedSiteId) {
-        alert('Please load a site before performing this action');
-        return;
-      }
+      // Assuming you have the selected site_id (maybe from the search box)
+      const selectedSiteId = searchTerm;
 
       fetch('http://127.0.0.1:5000/get_ip_mac', {
         method: 'POST',
@@ -133,13 +133,7 @@ function App() {
             alert(data.error);
           } else {
             console.log('Active IP/MAC Leases:', data);
-            const updatedData = tableData.map(row => {
-              const matchingLease = data.find(lease => lease.Terminal === row.Terminal);
-              return matchingLease
-                ? { ...row, IP: matchingLease.IP, MAC: matchingLease.MAC }
-                : row;
-            });
-            setTableData(updatedData);  // Update the table with the new IP/MAC data
+            // You can now display the IP/MAC data in the table or elsewhere
           }
         })
         .catch((error) => {
@@ -198,9 +192,7 @@ function App() {
             </th>
             <th>MAC</th>
             <th
-              style={{
-                color: sortConfig.key === 'Switch' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : ''
-              }}
+              style={{ color: sortConfig.key === 'Switch' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('Switch')}
             >
               Switch
@@ -254,7 +246,7 @@ function App() {
           ))}
         </tbody>
       </table>
-    </div >
+    </div>
   );
 }
 
