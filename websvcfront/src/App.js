@@ -90,43 +90,35 @@ function App() {
     setTableData(newTableData);
   };
 
+  const handleSearch = () => {
+    if (searchTerm) {
+      console.log(`Searching for: ${searchTerm}`);
+      fetch(`http://127.0.0.1:5000/search?query=${searchTerm}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log("Search result:", data); // Log the result from the backend
+          setTableData(data);  // Populate the table with the result
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    } else {
+      console.log("Search term is empty");
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleSearch();  // Trigger search when Enter key is pressed
+    }
+  };
+
   const handleSubmit = () => {
     if (action === 'Select action') {
       alert('Please select an action');
     } else {
       alert(`Action: ${action}`);
     }
-  };
-
-  const deleteRow = (index) => {
-    alert(`Action: Go for row ${index + 1}`);
-  };
-
-  const handleVNCButtonClick = (index) => {
-    alert(`VNC Go button clicked for row ${index + 1}`);
-  };
-
-  const handleOrionClick = (index) => {
-    alert(`Orion Go button clicked for row ${index + 1}`);
-  };
-
-  const handleZabbixClick = (index) => {
-    alert(`Zabbix Go button clicked for row ${index + 1}`);
-  };
-
-  const handleRefresh = () => {
-    generateData(); // Refresh the data
-  };
-
-  const getSortColor = (column) => {
-    if (sortConfig.key === column) {
-      if (sortConfig.direction === 'ascending') {
-        return 'blue';
-      } else if (sortConfig.direction === 'descending') {
-        return 'purple';
-      }
-    }
-    return ''; // Default color when not sorted
   };
 
   return (
@@ -138,10 +130,8 @@ function App() {
           placeholder="Search Site..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={handleKeyPress}  // Detect Enter key
         />
-        <button className="submit-button" onClick={handleRefresh}>
-          Refresh data
-        </button>
         <div className="right-container">
           <select className="action-dropdown" value={action} onChange={(e) => setAction(e.target.value)} style={{ width: '130%' }}>
             <option>Select action</option>
@@ -158,13 +148,13 @@ function App() {
           <tr>
             <th>Include</th>
             <th
-              style={{ color: getSortColor('Unit') }}
+              style={{ color: sortConfig.key === 'Unit' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('Unit')}
             >
               Unit
             </th>
             <th
-              style={{ color: getSortColor('Terminal') }}
+              style={{ color: sortConfig.key === 'Terminal' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('Terminal')}
             >
               Terminal
@@ -172,21 +162,21 @@ function App() {
             <th>VNC</th>
             <th>App Admin</th>
             <th
-              style={{ color: getSortColor('IP') }}
+              style={{ color: sortConfig.key === 'IP' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('IP')}
             >
               IP
             </th>
             <th>MAC</th>
             <th
-              style={{ color: getSortColor('Switch') }}
+              style={{ color: sortConfig.key === 'Switch' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('Switch')}
             >
               Switch
             </th>
             <th>Port</th>
             <th
-              style={{ color: getSortColor('Power') }}
+              style={{ color: sortConfig.key === 'Power' && sortConfig.direction !== 'none' ? (sortConfig.direction === 'ascending' ? 'blue' : 'purple') : '' }}
               onClick={() => sortTable('Power')}
             >
               Power
@@ -213,10 +203,10 @@ function App() {
               <td>{row.Unit}</td>
               <td>{row.Terminal}</td>
               <td>
-                <button onClick={() => handleVNCButtonClick(index)}>Go</button>
+                <button onClick={() => alert(`VNC Go button clicked for row ${index + 1}`)}>Go</button>
               </td>
               <td>
-                <button onClick={() => deleteRow(index)}>Go</button>
+                <button onClick={() => alert(`App Admin Go button clicked for row ${index + 1}`)}>Go</button>
               </td>
               <td>{row.IP}</td>
               <td>{row.MAC}</td>
@@ -224,10 +214,10 @@ function App() {
               <td>{row.Port}</td>
               <td>{row.Power}</td>
               <td>
-                <button onClick={() => handleOrionClick(index)}>Go</button>
+                <button onClick={() => alert(`Orion Go button clicked for row ${index + 1}`)}>Go</button>
               </td>
               <td>
-                <button onClick={() => handleZabbixClick(index)}>Go</button>
+                <button onClick={() => alert(`Zabbix Go button clicked for row ${index + 1}`)}>Go</button>
               </td>
             </tr>
           ))}

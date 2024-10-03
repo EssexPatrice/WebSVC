@@ -1,50 +1,29 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS  # Import CORS
+import pandas as pd
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Sample data
-data = [
-    {'Include': 'Yes', 'Unit': 'Unit 1', 'Terminal': 'T1', 'VNC': 'Go', 'IP': '192.168.1.1', 'MAC': 'XX:XX:XX:XX:XX:01', 'Switch': 'S1', 'Port': 'P1', 'Power': 'On', 'Orion': 'View', 'Zabbix': 'View'},
-    {'Include': 'No', 'Unit': 'Unit 2', 'Terminal': 'T2', 'VNC': 'Go', 'IP': '192.168.1.2', 'MAC': 'XX:XX:XX:XX:XX:02', 'Switch': 'S2', 'Port': 'P2', 'Power': 'Off', 'Orion': 'View', 'Zabbix': 'View'}
-]
+# Load the CSV file into a pandas DataFrame with 'Site' as string to preserve leading zeros
+csv_file_path = './data/AllSites.csv'
+df = pd.read_csv(csv_file_path, dtype={'Site': str})
 
-# Root route to avoid "Not Found"
 @app.route('/')
-def index():
-    return 'Flask API is running! Visit /api/data to get table data.'
+def home():
+    return "Flask API is running! Visit /search?query= to fetch data."
 
-# API to get table data
-@app.route('/api/data', methods=['GET'])
-def get_data():
-    return jsonify(data)
+# Search endpoint
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    
+    # Filter DataFrame by 'Site' or 'Terminal'
+    filtered_df = df[(df['Site'] == query) | (df['Terminal'] == query)]
 
-# API to add a new row
-@app.route('/api/data', methods=['POST'])
-def add_row():
-    new_row = request.json
-    data.append(new_row)
-    return jsonify({'message': 'Row added successfully'}), 201
-
-# API to delete a row
-@app.route('/api/data/<int:index>', methods=['DELETE'])
-def delete_row(index):
-    if 0 <= index < len(data):
-        del data[index]
-        return jsonify({'message': 'Row deleted successfully'}), 200
-    else:
-        return jsonify({'error': 'Row not found'}), 404
-
-# API to update a row
-@app.route('/api/data/<int:index>', methods=['PUT'])
-def update_row(index):
-    updated_row = request.json
-    if 0 <= index < len(data):
-        data[index] = updated_row
-        return jsonify({'message': 'Row updated successfully'}), 200
-    else:
-        return jsonify({'error': 'Row not found'}), 404
+    # Convert to dictionary and return as JSON
+    results = filtered_df.to_dict(orient='records')
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True)
