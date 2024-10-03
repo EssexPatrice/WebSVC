@@ -32,31 +32,21 @@ def search():
 @app.route('/get_ip_mac', methods=['POST'])
 def get_ip_mac():
     data = request.get_json()
+    print(f"Received data from frontend: {data}")  # Check the received site_id
+    
     site_id = data.get('site_id')
-    
-    # Find the NSD IP address for the given site
-    nsd_ip = df.loc[df['Site'] == site_id, 'NSD'].values
-    if len(nsd_ip) == 0:
-        return jsonify({'error': 'Site not found or NSD missing'}), 404
-    
-    nsd_url = f'http://{nsd_ip[0]}/dnsmasq.leases'
-    
-    try:
-        response = requests.get(nsd_url)
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch leases'}), 500
+    if not site_id:
+        print("Error: Site ID not provided")
+        return jsonify({"error": "Site ID not provided"}), 400
 
-        leases_data = response.text
-        # Simulate extracting active leases and matching them with Terminal IDs
-        active_leases = extract_active_leases(leases_data)
-        
-        # Filter active leases by Terminal ID matching
-        matched_leases = match_leases_with_terminals(active_leases, site_id)
-        
-        return jsonify(matched_leases)
-        
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'Error fetching data: {str(e)}'}), 500
+    # Simulate the process of fetching IP/MAC
+    print(f"Fetching IP/MAC for site ID: {site_id}")
+    # Add logic to fetch the IP/MAC data
+    # Example:
+    ip_mac_data = {"ip": "192.168.1.10", "mac": "00:1A:2B:3C:4D:5E"}  # Dummy data
+
+    print(f"IP/MAC Data: {ip_mac_data}")
+    return jsonify(ip_mac_data)
 
 def extract_active_leases(leases_data):
     leases = []

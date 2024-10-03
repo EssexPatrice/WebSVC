@@ -115,10 +115,7 @@ function App() {
     if (action === 'Select action') {
       alert('Please select an action');
     } else if (action === 'Get IP + MAC') {
-      if (!selectedSiteId) {
-        alert('Please load a site before performing this action');
-        return;
-      }
+      const selectedSiteId = searchTerm;
 
       fetch('http://127.0.0.1:5000/get_ip_mac', {
         method: 'POST',
@@ -132,14 +129,18 @@ function App() {
           if (data.error) {
             alert(data.error);
           } else {
-            console.log('Active IP/MAC Leases:', data);
-            const updatedData = tableData.map(row => {
-              const matchingLease = data.find(lease => lease.Terminal === row.Terminal);
-              return matchingLease
-                ? { ...row, IP: matchingLease.IP, MAC: matchingLease.MAC }
-                : row;
+            console.log('Active IP/MAC Leases:', data);  // This should print the IP/MAC data
+
+            // Ensure you're displaying this data in the table
+            setTableData(prevData => {
+              // Assume 'Terminal' is in both the data and tableData
+              return prevData.map(row => {
+                if (row.Terminal === selectedSiteId) {
+                  return { ...row, IP: data.ip, MAC: data.mac };  // Update the matching row
+                }
+                return row;
+              });
             });
-            setTableData(updatedData);  // Update the table with the new IP/MAC data
           }
         })
         .catch((error) => {
@@ -157,7 +158,7 @@ function App() {
           type="text"
           className="search-box"
           placeholder="Search Site..."
-          value={searchTerm}
+          value={searchTerm || ''}  // Ensure it never becomes undefined
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={handleKeyPress}  // Detect Enter key
         />
