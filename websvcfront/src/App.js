@@ -96,9 +96,13 @@ function App() {
     }
   };
 
-  const handlePostRequest = async () => {
+  const get_ip_mac = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/get_ip_mac");
+      // console.log(selectedSiteId);
+      const response = await axios.post("http://localhost:5000/get_ip_mac", {
+        siteId: selectedSiteId,
+      });
+
       const data = response.data;
       console.log("Data sent successfully:", response.data);
 
@@ -106,7 +110,7 @@ function App() {
         // Assume 'Terminal' is in both the data and tableData
         return prevData.map((row) => {
           if (row.Terminal === selectedSiteId) {
-            return { ...row, IP: data.ip, MAC: data.mac }; // Update the matching row
+            return { ...row, IP: data.IP, MAC: data.MAC }; // Update the matching row
           }
           return row;
         });
@@ -116,49 +120,25 @@ function App() {
     }
   };
 
+  const reboot_terminal_browser = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/reboot_terminal_browser",
+        { Action: action }
+      );
+    } catch (error) {
+      console.error("Error sending POST request:", error);
+    }
+  };
+
   const handleSubmit = () => {
     if (action === "Select action") {
       alert("Please select an action");
     } else if (action === "Get IP + MAC") {
-      handlePostRequest();
-
-      // setTableData((prevData) => {
-      //   // Assume 'Terminal' is in both the data and tableData
-      //   return prevData.map((row) => {
-      //     if (row.Terminal === selectedSiteId) {
-      //       return { ...row, IP: data.ip, MAC: data.mac }; // Update the matching row
-      //     }
-      //     return row;
-      //   });
-      // });
-      // const selectedSiteId = searchTerm;
-      // fetch("http://127.0.0.1:5000/get_ip_mac", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // })
-      //   .then((response) => response.json())
-      //   .then((data) => {
-      //     if (data.error) {
-      //       alert(data.error);
-      //     } else {
-      //       console.log("Active IP/MAC Leases:", data); // This should print the IP/MAC data
-      //       // Ensure you're displaying this data in the table
-      //       setTableData((prevData) => {
-      //         // Assume 'Terminal' is in both the data and tableData
-      //         return prevData.map((row) => {
-      //           if (row.Terminal === selectedSiteId) {
-      //             return { ...row, IP: data.ip, MAC: data.mac }; // Update the matching row
-      //           }
-      //           return row;
-      //         });
-      //       });
-      //     }
-      //   })
-      //   .catch((error) => {
-      //     console.error("Error:", error);
-      //   });
+      get_ip_mac();
+    } else if (action === "Reboot Browser" || action === "Reboot Terminal") {
+      // console.log(action);
+      reboot_terminal_browser();
     } else {
       alert(`Action: ${action}`);
     }
