@@ -4,6 +4,7 @@ import pandas as pd
 from flask_cors import CORS
 import subprocess
 import requests
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -36,9 +37,14 @@ def extract_active_leases(data):
             if "Inactive or non-responsive leases" in line:
                 break
             if line.strip():  # Skip empty lines
-                active_leases.append(line.strip())
+                elements = line.split('\t')
+                ip_address = elements[2]
+                mac_address = elements[1]
+                terminal = elements[3]
 
-    return active_leases
+                active_leases.append({'MAC': mac_address, 'Terminal': terminal, 'IP': ip_address})
+
+    return json.dumps(active_leases, indent=4)
 
 
 @app.route('/')
@@ -63,17 +69,36 @@ def search():
 # New route to handle fetching IP and MAC information
 @app.route('/get_ip_mac', methods=['POST'])
 def get_ip_mac():
-    ip_address = "10.209.25.40"
-    nds =f"http://{ip_address}/dnsmasq.leases"
-    subprocess.Popen(['start', 'msedge', nds], shell=True)
+    ip_address = None
 
-    try:
-        data = fetch_leases(nds)
-        active_leases = extract_active_leases(data)
-        return jsonify(active_leases)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data: {e}")
+    data = request.get_json()
+    siteID = data.get('siteId')
+    for index, row in df.iterrows():
+        if row['Site'] == siteID:
+            ip_address = row['NSD']
+            break
+    if ip_address:
+        nds =f"http://{ip_address}/dnsmasq.leases"
+        subprocess.Popen(['start', 'msedge', nds], shell=True)
+
+        try:
+            data = fetch_leases(nds)
+            active_leases = extract_active_leases(data)
+            return jsonify(active_leases)
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data: {e}")
+            return jsonify(f"Error fetching data: {e}")
+    else:
         return jsonify(f"Error fetching data: {e}")
+
+
+@app.route('/reboot_terminal_browser', methods=['POST'])
+def reboot_terminal_browser():
+    data = request.get_json()
+    action = data.get('Action')
+    print(action)
+    
+    return action
 
     # data = request.get_json()
     # print(f"Received data from frontend: {data}")  # Check the received site_id
@@ -92,25 +117,25 @@ def get_ip_mac():
     # print(f"IP/MAC Data: {ip_mac_data}")
     
 
-def extract_active_leases(leases_data):
-    leases = []
-    for line in leases_data.splitlines():
-        parts = line.split()
-        if len(parts) >= 3:
-            mac_address = parts[1]
-            terminal_id = parts[2]
-            leases.append({'MAC': mac_address, 'Terminal': terminal_id})
-    return leases
+# def extract_active_leases(leases_data):
+#     leases = []
+#     for line in leases_data.splitlines():
+#         parts = line.split()
+#         if len(parts) >= 3:
+#             mac_address = parts[1]
+#             terminal_id = parts[2]
+#             leases.append({'MAC': mac_address, 'Terminal': terminal_id})
+#     return leases
 
-def match_leases_with_terminals(leases, site_id):
-    matched = []
-    terminals_in_site = df[df['Site'] == site_id]['Terminal'].values
+# def match_leases_with_terminals(leases, site_id):
+#     matched = []
+#     terminals_in_site = df[df['Site'] == site_id]['Terminal'].values
     
-    for lease in leases:
-        if lease['Terminal'] in terminals_in_site:
-            matched.append(lease)
+#     for lease in leases:
+#         if lease['Terminal'] in terminals_in_site:
+#             matched.append(lease)
     
-    return matched
+#     return matched
 
 if __name__ == '__main__':
     app.run(debug=True)
