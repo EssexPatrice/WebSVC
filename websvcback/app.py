@@ -1,13 +1,12 @@
 from flask import Flask, jsonify, request
 import pandas as pd
-# import requests
 from flask_cors import CORS
 import subprocess
 import requests
 import json
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 data = {}
 # Load the CSV file into a pandas DataFrame with 'Site' as string to preserve leading zeros
@@ -84,6 +83,9 @@ def get_ip_mac():
         try:
             data = fetch_leases(nds)
             active_leases = extract_active_leases(data)
+
+            print(active_leases)
+
             return jsonify(active_leases)
         except requests.exceptions.RequestException as e:
             print(f"Error fetching data: {e}")
@@ -91,6 +93,42 @@ def get_ip_mac():
     else:
         return jsonify(f"Error fetching data: {e}")
 
+@app.route('/run_vnc', methods=['POST'])
+def run_vnc():
+    data = request.get_json()
+    command = data.get('command')
+    try:
+        # Execute the VNC command
+        subprocess.run(command, shell=True)
+        return jsonify({'status': 'success', 'message': 'Command executed successfully'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+# This function will return site info based on the site ID
+@app.route("/get_orion_data", methods=["POST"])
+def get_orion_data():
+    try:
+        site_id = request.json.get("siteId")
+        if not site_id:
+            return jsonify({"error": "Site ID is required"}), 400
+
+        data = load_data()  # Assuming load_data() loads 'AllSites.csv'
+        site_info = data[data['SiteID'] == site_id]
+
+        if site_info.empty:
+            return jsonify({"error": "Site not found"}), 404
+
+        orion_value = site_info['Orion'].values[0]  # Get the Orion value ('at' or 'mi')
+        
+        return jsonify({
+            "siteId": site_id,
+            "orionValue": orion_value
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/reboot_terminal_browser', methods=['POST'])
 def reboot_terminal_browser():
@@ -99,43 +137,6 @@ def reboot_terminal_browser():
     print(action)
     
     return action
-
-    # data = request.get_json()
-    # print(f"Received data from frontend: {data}")  # Check the received site_id
-    
-    # site_id = data.get('site_id')
-    # if not site_id:
-    #     print("Error: Site ID not provided")
-    #     return jsonify({"error": "Site ID not provided"}), 400
-
-    # # Simulate the process of fetching IP/MAC
-    # print(f"Fetching IP/MAC for site ID: {site_id}")
-    # # Add logic to fetch the IP/MAC data
-    # # Example:
-    # ip_mac_data = {"ip": "192.168.1.10", "mac": "00:1A:2B:3C:4D:5E"}  # Dummy data
-
-    # print(f"IP/MAC Data: {ip_mac_data}")
-    
-
-# def extract_active_leases(leases_data):
-#     leases = []
-#     for line in leases_data.splitlines():
-#         parts = line.split()
-#         if len(parts) >= 3:
-#             mac_address = parts[1]
-#             terminal_id = parts[2]
-#             leases.append({'MAC': mac_address, 'Terminal': terminal_id})
-#     return leases
-
-# def match_leases_with_terminals(leases, site_id):
-#     matched = []
-#     terminals_in_site = df[df['Site'] == site_id]['Terminal'].values
-    
-#     for lease in leases:
-#         if lease['Terminal'] in terminals_in_site:
-#             matched.append(lease)
-    
-#     return matched
 
 if __name__ == '__main__':
     app.run(debug=True)

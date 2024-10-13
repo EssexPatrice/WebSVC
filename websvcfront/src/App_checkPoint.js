@@ -171,58 +171,25 @@ function App() {
 
   const handleSubmit = () => {
     if (action === "Select action") {
-        alert("Please select an action");
+      alert("Please select an action");
     } else if (action === "Get IP + MAC") {
-        get_ip_mac();
+      get_ip_mac();
     } else if (action === "Reboot Browser" || action === "Reboot Terminal") {
-        reboot_terminal_browser();
+      reboot_terminal_browser();
     } else if (action === "Copy to clipboard") {
-        const clipboardData = formatClipboardData();  // Generate the clipboard data
-        navigator.clipboard.writeText(clipboardData).then(
-            () => {
-                alert("Data copied to clipboard!");
-            },
-            (err) => {
-                console.error("Failed to copy to clipboard", err);
-            }
-        );
-    } else if (action === "Get Orion") {
-        const confirmation = window.confirm(
-            "Ensure you are logged into Orion for both Atlanta and Midway before proceeding."
-        );
-  
-        if (!confirmation) {
-            alert("Operation aborted.");
-            return;
+      const clipboardData = formatClipboardData();  // Generate the clipboard data
+      navigator.clipboard.writeText(clipboardData).then(
+        () => {
+          alert("Data copied to clipboard!");
+        },
+        (err) => {
+          console.error("Failed to copy to clipboard", err);
         }
-
-        // Process each row in the table to fetch the Orion data
-        tableData.forEach((row) => {
-            const siteId = row.SiteID; // Extract SiteID from the row data
-            const orionValue = row.Orion; // Check if Orion value is 'at' or 'mi'
-  
-            // Construct the correct Orion URL based on 'at' or 'mi'
-            const orionUrl =
-                orionValue === "at"
-                    ? `https://at-orionpoll01.corp.securustech.net/Orion/NetPerfMon/Resources/NodeSearchResults.aspx?Property=Caption&SearchText=${siteId}`
-                    : orionValue === "mi"
-                    ? `https://mi-orionpoll01.corp.securustech.net/Orion/NetPerfMon/Resources/NodeSearchResults.aspx?Property=Caption&SearchText=${siteId}`
-                    : null;
-
-            if (!orionUrl) {
-                console.error(`Invalid Orion value: ${orionValue}`);
-                return;
-            }
-  
-            console.log(`Opening Orion URL: ${orionUrl}`);
-  
-            // Open the Orion URL in a new tab
-            window.open(orionUrl, "_blank");
-        });
+      );
     } else {
-        alert(`Action: ${action}`);
+      alert(`Action: ${action}`);
     }
-};
+  }; 
 
   const handleSort = (key) => {
     let direction = "ascending";
@@ -371,59 +338,41 @@ function App() {
               <th>Zabbix</th>
             </tr>
           </thead>
-          <tbody>
-            {tableData.map((row, index) => (
-              <tr key={index} style={{ backgroundColor: row.Include ? "green" : "#424242" }}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={row.Include}
-                    onChange={(e) => handleCheckboxChange(index, e)}
-                    style={{
-                      transform: "scale(1.5)",
-                      backgroundColor: row.Include ? "green" : "#424242",
-                      color: row.Include ? "white" : "#f0f0f0",
-                    }}
-                  />
-                </td>
-                <td>{row.Unit}</td>
-                <td>{row.Terminal}</td>
-                <td>
-                  {row.IP && <button onClick={() => handleVNCGoClick(row.IP)}>Go</button>}
-                </td>
-                <td>
-                  {row.IP && <button onClick={() => handleAppAdminGoClick(row.IP)}>Go</button>}
-                </td>
-                <td>{row.IP}</td>
-                <td>{row.MAC}</td>
-                <td>{row.Switch}</td>
-                <td>{row.Port}</td>
-                <td>{row.Power}</td>
-                
-                {/* Orion column */}
-                <td>
-                  {row.Orion && (
-                    <button
-                      onClick={() => {
-                        const orionUrl =
-                          row.Orion === "at"
-                            ? `https://at-orionpoll01.corp.securustech.net/Orion/NetPerfMon/Resources/NodeSearchResults.aspx?Property=Caption&SearchText=${row.SiteID}`
-                            : `https://mi-orionpoll01.corp.securustech.net/Orion/NetPerfMon/Resources/NodeSearchResults.aspx?Property=Caption&SearchText=${row.SiteID}`;
-                        window.open(orionUrl, "_blank");
-                      }}
-                    >
-                      Go
-                    </button>
-                  )}
-                </td>
-
-                {/* Zabbix column */}
-                <td>
-                  <button onClick={() => handleZabbixGoClick(row.Terminal)}>Go</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+        <tbody>
+          {tableData.map((row, index) => (
+            <tr key={index} style={{ backgroundColor: row.Include ? "green" : "#424242" }}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={row.Include}
+                  onChange={(e) => handleCheckboxChange(index, e)}
+                  style={{
+                    transform: "scale(1.5)",
+                    backgroundColor: row.Include ? "green" : "#424242",
+                    color: row.Include ? "white" : "#f0f0f0",
+                  }}
+                />
+              </td>
+              <td>{row.Unit}</td>
+              <td>{row.Terminal}</td>
+              <td>
+                {row.IP && <button onClick={() => handleVNCGoClick(row.IP)}>Go</button>}
+              </td>
+              <td>
+                {row.IP && <button onClick={() => handleAppAdminGoClick(row.IP)}>Go</button>}
+              </td>
+              <td>{row.IP}</td>
+              <td>{row.MAC}</td>
+              <td>{row.Switch}</td>
+              <td>{row.Port}</td>
+              <td>{row.Power}</td>
+              <td> {/* Orion column - currently empty or future Orion functionality */} </td>
+              <td>
+                <button onClick={() => handleZabbixGoClick(row.Terminal)}>Go</button>
+              </td> {/* Zabbix column */}
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   );
